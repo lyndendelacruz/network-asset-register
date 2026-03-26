@@ -1,0 +1,24 @@
+{
+  "name": "network-asset-register",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lyndendelacruz/network-asset-register.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/lyndendelacruz/network-asset-register/issues"
+  },
+  "homepage": "https://github.com/lyndendelacruz/network-asset-register#readme",
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}
