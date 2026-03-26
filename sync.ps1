@@ -9,13 +9,13 @@
 # Path to your SharePoint‑synced Excel file
 $excelPath = "C:\Users\Lynden.DeLaCruz\Cloud Direct\Network Site Info Update - Asset Register\JCL-VM-Asset-Register-Live-Ext.xlsx"
 
-# Path to your GitHub repo
-$repoPath = "C:\dev\network-asset-register"
+# Path to your GitHub repo (UPDATED)
+$repoPath = "C:\Users\Lynden.DeLaCruz\OneDrive - Cloud Direct\Desktop\dev\network-asset-register"
 
-# Path to your Node converter script
+# Path to your Node converter script (UPDATED)
 $convertScript = "$repoPath\scripts\convert.js"
 
-# Debounce delay (ms) to avoid double triggers
+# Debounce delay (ms)
 $debounce = 1500
 
 
@@ -32,7 +32,7 @@ $fsw = New-Object System.IO.FileSystemWatcher
 $fsw.Path = (Split-Path $excelPath)
 $fsw.Filter = (Split-Path $excelPath -Leaf)
 
-# ⭐ IMPORTANT: Excel + OneDrive require multiple notify filters
+# Excel + OneDrive require multiple notify filters
 $fsw.NotifyFilter = [System.IO.NotifyFilters]'LastWrite, FileName, Size'
 
 
@@ -53,7 +53,7 @@ $action = {
     Write-Host "`nChange detected. Running conversion..."
 
     # Run Node converter
-    node $convertScript
+    node $convertScript | Write-Host
 
     # Commit + push
     Set-Location $repoPath
