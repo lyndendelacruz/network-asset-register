@@ -47,23 +47,23 @@ const csvLines = [header.join(";")];
 // Convert Excel rows → CSV rows
 for (const row of rows) {
   const line = [
-    row["Legacy Name"],
-    row["Future Name"],
+    row["Site Name (Legacy Aug 2024)"],
+    row["Site Name (Future Jan 2025)"],
     row["WAN IP"],
     row["Internal IP"],
     row["Device Model"],
     row["Serial Number"],
-    row["Firmware"],
+    row["Firmware version"],
     row["Address 1"],
     row["Address 2"],
     row["Postcode"],
-    row["PSTN"],
+    row["PSTN No."],
     row["Service"],
-    row["Status"],
+    row["status"],
     row["Password Location"],
-    row["Remote Access"],
-    row["PRTG"],
-    row["Syslog"]
+    row["Remote Access FGT VPN"],
+    row["PRTG Monitoring"],
+    row["Syslog?"]
   ]
     .map(v => (v || "").toString().trim())
     .join(";");
