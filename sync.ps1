@@ -1,70 +1,84 @@
-# ================================
-#  Network Asset Register Watcher
-#  5-second debounce, OneDrive-safe
-#  Commit message: Auto-update: synced Excel changes
-# ================================
+# ============================
+# sync.ps1 — LIVE GITHUB SYNC
+# ============================
 
-$watchPath = "C:\Users\Lynden.DeLaCruz\OneDrive - Cloud Direct\Desktop\dev\network-asset-register"
-$debounceSeconds = 5
-$timer = New-Object Timers.Timer
-$timer.Interval = $debounceSeconds * 1000
+# ----------------------------
+# CONFIGURATION
+# ----------------------------
+
+# Path to your SharePoint‑synced Excel file
+$excelPath = "C:\Users\Lynden.DeLaCruz\Cloud Direct\Network Site Info Update - Asset Register\JCL-VM-Asset-Register-Live-Ext.xlsx"
+
+# Path to your GitHub repo (UPDATED)
+$repoPath = "C:\Users\Lynden.DeLaCruz\OneDrive - Cloud Direct\Desktop\dev\network-asset-register"
+
+# Path to your Node converter script (UPDATED)
+$convertScript = "$repoPath\scripts\convert.js"
+
+# Debounce delay (ms)
+$debounce = 1500
+
+
+# ----------------------------
+# WATCHER SETUP
+# ----------------------------
+
+Write-Host "Starting watcher..."
+Write-Host "Watching: $excelPath"
+Write-Host "Repo: $repoPath"
+Write-Host "-------------------------`n"
+
+$fsw = New-Object System.IO.FileSystemWatcher
+$fsw.Path = (Split-Path $excelPath)
+$fsw.Filter = (Split-Path $excelPath -Leaf)
+
+# Excel + OneDrive require multiple notify filters
+$fsw.NotifyFilter = [System.IO.NotifyFilters]'LastWrite, FileName, Size'
+
+
+# ----------------------------
+# DEBOUNCE TIMER
+# ----------------------------
+
+$timer = New-Object System.Timers.Timer
+$timer.Interval = $debounce
 $timer.AutoReset = $false
 
-Write-Host "Watcher started. Monitoring:" -ForegroundColor Cyan
-Write-Host $watchPath -ForegroundColor Yellow
 
-# --- Helper: Wait until file is fully written and OneDrive is done syncing ---
-function Wait-ForStableFile {
-    param([string]$filePath)
+# ----------------------------
+# ACTION ON CHANGE
+# ----------------------------
 
-    while ($true) {
-        try {
-            $stream = [System.IO.File]::Open($filePath, 'Open', 'Read', 'None')
-            $stream.Close()
-            break
-        } catch {
-            Start-Sleep -Milliseconds 300
-        }
-    }
-
-    # Wait for OneDrive to finish syncing (no .tmp, .partial, .lock)
-    Start-Sleep -Milliseconds 500
-}
-
-# --- Debounced action ---
 $action = {
-    Write-Host "Quiet period reached. Processing changes..." -ForegroundColor Cyan
+    Write-Host "`nChange detected. Running conversion..."
 
-    # Ensure repo is clean
-    git -C $watchPath add .
-    git -C $watchPath commit -m "Auto-update: synced Excel changes"
-    git -C $watchPath push
+    # Run Node converter
+    node $convertScript | Write-Host
 
-    Write-Host "GitHub updated successfully." -ForegroundColor Green
+    # Commit + push
+    Set-Location $repoPath
+    git add .
+    git commit -m "Auto-update CSV $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" --allow-empty
+    git push
+
+    Write-Host "Sync complete."
 }
 
-# --- FileSystemWatcher setup ---
-$fsw = New-Object IO.FileSystemWatcher $watchPath, "*.xlsx"
-$fsw.IncludeSubdirectories = $false
-$fsw.EnableRaisingEvents = $true
+$timerEvent = Register-ObjectEvent -InputObject $timer -EventName Elapsed -Action $action
 
-# --- Event handler ---
-$handler = Register-ObjectEvent $fsw Changed -Action {
-    $file = $Event.SourceEventArgs.FullPath
 
-    if ($file -match "~\$") { return }   # Ignore temp Excel files
+# ----------------------------
+# FILE CHANGE EVENT
+# ----------------------------
 
-    Write-Host "Change detected: $file" -ForegroundColor Magenta
-
-    Wait-ForStableFile $file
-
-    # Reset debounce timer
+Register-ObjectEvent -InputObject $fsw -EventName Changed -Action {
     $timer.Stop()
     $timer.Start()
 }
 
-# --- Timer event ---
-Register-ObjectEvent -InputObject $timer -EventName Elapsed -Action $action
 
-# Keep script alive
-while ($true) { Start-Sleep 1 }
+# ----------------------------
+# KEEP SCRIPT ALIVE
+# ----------------------------
+
+while ($true) { Start-Sleep -Seconds 1 }
