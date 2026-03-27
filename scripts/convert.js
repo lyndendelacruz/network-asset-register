@@ -17,10 +17,10 @@ console.log("Reading Excel:", excelPath);
 const workbook = xlsx.readFile(excelPath);
 const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-// Convert sheet → JSON rows
+// Convert sheet → JSON rows (keys = Excel headers)
 const rows = xlsx.utils.sheet_to_json(sheet, { defval: "" });
 
-// CSV header (must match extension)
+// CSV header (must match your extension)
 const header = [
   "legacyName",
   "futureName",
@@ -41,11 +41,33 @@ const header = [
   "syslog"
 ];
 
-// Convert rows → CSV lines
+// Start CSV lines
 const csvLines = [header.join(";")];
 
+// Convert Excel rows → CSV rows
 for (const row of rows) {
-  const line = header.map(h => (row[h] || "").toString().trim()).join(";");
+  const line = [
+    row["Legacy Name"],
+    row["Future Name"],
+    row["WAN IP"],
+    row["Internal IP"],
+    row["Device Model"],
+    row["Serial Number"],
+    row["Firmware"],
+    row["Address 1"],
+    row["Address 2"],
+    row["Postcode"],
+    row["PSTN"],
+    row["Service"],
+    row["Status"],
+    row["Password Location"],
+    row["Remote Access"],
+    row["PRTG"],
+    row["Syslog"]
+  ]
+    .map(v => (v || "").toString().trim())
+    .join(";");
+
   csvLines.push(line);
 }
 
